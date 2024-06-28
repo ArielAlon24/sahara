@@ -3,7 +3,7 @@ CC = gcc
 SRC_DIR = src
 OUT_DIR = out
 
-EXEC = sand
+EXEC = sahara
 
 RAYLIB_DIR = /opt/homebrew/opt/raylib
 CFLAGS = -Wall -Wextra -Wpedantic -I$(RAYLIB_DIR)/include
