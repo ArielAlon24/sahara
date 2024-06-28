@@ -1,13 +1,22 @@
-#ifndef PARTICLES_H
-#define PARTICLES_H
+#ifndef PARTICLE_H
+#define PARTICLE_H
 
 #include "raylib.h"
 
 typedef enum {
-  PARTICLE_AIR = 0,
-  PARTICLE_SAND = 1,
+    AIR = 0,
+    SAND = 1,
+    STONE = 2,
+} ParticleType;
+
+Color particle_type_color(ParticleType type);
+
+typedef struct {
+    ParticleType type;
+    double velocity;
+    bool is_updated;
 } Particle;
 
-Color getColor(Particle p);
+Particle new_particle(ParticleType type);
 
-#endif  // PARTICLES_H
+#endif
