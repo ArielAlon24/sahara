@@ -10,8 +10,8 @@
 #define NAME "sand"
 #define WIDTH 800
 #define HEIGHT 800
-#define PARTICLE_SIZE 2
-#define FPS 60
+#define PARTICLE_SIZE 5
+#define FPS 120
 #define G_FORCE 0.2
 
 typedef struct {
@@ -31,14 +31,15 @@ Cursor *init_cursor(void) {
 
 void free_cursor(Cursor *cursor) { free(cursor); }
 
-void adjust_cursor_length(Cursor *cursor, int mouse_wheel_move) {
-    size_t new_length = cursor->length + mouse_wheel_move;
+void adjust_cursor_length(Cursor *cursor) {
+    int mouse_wheel_move = (int)GetMouseWheelMove();
+    int new_length = cursor->length + mouse_wheel_move;
     if (new_length <= 1) {
         cursor->length = 1;
     } else if (new_length >= WIDTH / 4) {
         cursor->length = WIDTH / 4;
     } else {
-        cursor->length = new_length;
+        cursor->length = (size_t)new_length;
     }
 }
 
@@ -52,7 +53,6 @@ void draw_cursor(Cursor *cursor, size_t x, size_t y) {
 
 void set_area_particle_type(World *world, int x, int y, int length, ParticleType current_type) {
     int half_length = length / 2;
-    int start_offset = x - half_length >= 0 ? -half_length : 0;
     int end_offset = (length % 2 == 0) ? half_length - 1 : half_length;
 
     for (int dx = x - half_length >= 0 ? -half_length : 0; dx <= end_offset; dx++) {
@@ -85,7 +85,7 @@ int main(void) {
 
         size_t x = (size_t)mouse_position.x / PARTICLE_SIZE;
         size_t y = (size_t)mouse_position.y / PARTICLE_SIZE;
-        adjust_cursor_length(cursor, (int)GetMouseWheelMove());
+        adjust_cursor_length(cursor);
 
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             set_area_particle_type(world, x, y, cursor->length, cursor->type);

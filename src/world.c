@@ -94,7 +94,7 @@ void update_sand(World *world, size_t x, size_t y, Particle *p0) {
         p1 = get_particle(world, x, y + distance);
         p1->is_updated = true;
         replace_particles(p0, p1);
-    } else {
+    } else if (rand() % 10 > 8) {
         int dir = (rand() % 2 == 0) ? -1 : 1;
         if (x + dir >= 0 && x + dir < world->width) {
             p1 = get_particle(world, (size_t)x + dir, y + 1);
