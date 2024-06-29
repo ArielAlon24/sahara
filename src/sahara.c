@@ -14,35 +14,59 @@
 #define FPS 60
 #define G_FORCE 0.2
 
-void draw_cursor(size_t x, size_t y, size_t length, Color color) {
+typedef struct {
+    ParticleType type;
+    int length;
+} Cursor;
+
+Cursor *init_cursor(void) {
+    Cursor *c = (Cursor *)malloc(sizeof(Cursor));
+    if (c == NULL) {
+        return NULL;
+    }
+    c->type = SAND;
+    c->length = 1;
+    return c;
+}
+
+void free_cursor(Cursor *cursor) { free(cursor); }
+
+void adjust_cursor_length(Cursor *cursor, int mouse_wheel_move) {
+    size_t new_length = cursor->length + mouse_wheel_move;
+    if (new_length <= 1) {
+        cursor->length = 1;
+    } else if (new_length >= WIDTH / 4) {
+        cursor->length = WIDTH / 4;
+    } else {
+        cursor->length = new_length;
+    }
+}
+
+void draw_cursor(Cursor *cursor, size_t x, size_t y) {
     // xP + 1 - (size / 2)P = P(x - size / 2) + 1
-    DrawRectangleLines(PARTICLE_SIZE * (x - length / 2) + 1, PARTICLE_SIZE * (y - length / 2) + 1,
-                       PARTICLE_SIZE * length - 1, PARTICLE_SIZE * length - 1, color);
+    DrawRectangleLines(PARTICLE_SIZE * (x - cursor->length / 2) + 1,
+                       PARTICLE_SIZE * (y - cursor->length / 2) + 1,
+                       PARTICLE_SIZE * cursor->length - 1, PARTICLE_SIZE * cursor->length - 1,
+                       particle_type_color(cursor->type));
 }
 
 void set_area_particle_type(World *world, int x, int y, int length, ParticleType current_type) {
     int half_length = length / 2;
-    int start_offset = -half_length;
+    int start_offset = x - half_length >= 0 ? -half_length : 0;
     int end_offset = (length % 2 == 0) ? half_length - 1 : half_length;
 
-    for (int i = start_offset; i <= end_offset; i++) {
-        for (int j = start_offset; j <= end_offset; j++) {
-            set_particle_type(world, x + i, y + j, current_type);
+    for (int dx = x - half_length >= 0 ? -half_length : 0; dx <= end_offset; dx++) {
+        for (int dy = y - half_length >= 0 ? -half_length : 0; dy <= end_offset; dy++) {
+            set_particle_type(world, x + dx, y + dy, current_type);
         }
     }
 }
 
-int adjust_length(int length, int mouse_wheel_move) {
-    int new_length = length + mouse_wheel_move;
-    if (new_length <= 1) {
-        return 1;
-    }
-
-    if (new_length >= WIDTH / PARTICLE_SIZE) {
-        return WIDTH / PARTICLE_SIZE;
-    }
-
-    return new_length;
+Vector2 get_mouse_particle_position(void) {
+    Vector2 position = GetMousePosition();
+    Vector2 particle_position = {(size_t)position.x / PARTICLE_SIZE,
+                                 (size_t)position.y / PARTICLE_SIZE};
+    return particle_position;
 }
 
 int main(void) {
@@ -51,33 +75,32 @@ int main(void) {
 
     InitWindow(WIDTH, HEIGHT, NAME);
     SetTargetFPS(FPS);
+    Cursor *cursor = init_cursor();
 
     Vector2 mouse_position;
-    ParticleType current_type = SAND;
-    int length = 1;
 
     while (!WindowShouldClose()) {
+
         mouse_position = GetMousePosition();
+
         size_t x = (size_t)mouse_position.x / PARTICLE_SIZE;
         size_t y = (size_t)mouse_position.y / PARTICLE_SIZE;
-
-        int mouse_wheel_move = (int)GetMouseWheelMove();
-        length = adjust_length(length, mouse_wheel_move);
+        adjust_cursor_length(cursor, (int)GetMouseWheelMove());
 
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            set_area_particle_type(world, x, y, length, current_type);
+            set_area_particle_type(world, x, y, cursor->length, cursor->type);
         }
 
         if (IsKeyDown(KEY_ONE)) {
-            current_type = SAND;
+            cursor->type = SAND;
         }
 
         if (IsKeyDown(KEY_TWO)) {
-            current_type = STONE;
+            cursor->type = STONE;
         }
 
         if (IsKeyDown(KEY_THREE)) {
-            current_type = AIR;
+            cursor->type = AIR;
         }
 
         if (IsKeyDown(KEY_R)) {
@@ -87,14 +110,14 @@ int main(void) {
         BeginDrawing();
 
         update(world);
-
         draw_world(world);
-        draw_cursor(x, y, length, particle_type_color(current_type));
+        draw_cursor(cursor, x, y);
 
         EndDrawing();
     }
 
     free_world(world);
+    free_cursor(cursor);
     CloseWindow();
 
     return 0;

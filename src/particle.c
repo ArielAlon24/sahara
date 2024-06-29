@@ -28,7 +28,7 @@ Color particle_type_color(ParticleType type) {
 
 typedef struct {
     ParticleType type;
-    double velocity;
+    float velocity;
     bool is_updated;
 } Particle;
 

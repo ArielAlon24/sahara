@@ -75,6 +75,7 @@ void update_sand(World *world, size_t x, size_t y, Particle *p0) {
 
     size_t distance = 0;
     size_t max_distance = (size_t)p0->velocity;
+
     while (distance <= max_distance) {
         if (y + distance + 1 >= world->height) {
             break;
@@ -88,7 +89,7 @@ void update_sand(World *world, size_t x, size_t y, Particle *p0) {
         }
     }
 
-    if (distance > 0.0) {
+    if (distance > 0) {
         p0->velocity += world->g_force;
         p1 = get_particle(world, x, y + distance);
         p1->is_updated = true;
